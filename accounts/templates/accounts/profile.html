@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="profile-view">
+        <img class='profile-heading profile-pic' src="{{ user_profile.profile_pic.url }}" alt="profile_pic">
+        <h5 class='profile-heading'>{{ user_profile.user.username }}'s Profile</h5>
+        <button id="followers-btn" class='profile-heading btn btn-primary' data-toggle="modal" data-target="#exampleModalLong">{{ followers }} followers</button>
+        <button id="following-btn" class='profile-heading btn btn-primary' data-toggle="modal" data-target="#exampleModalLong">{{ following }} following</button>
+        {% if request.user != user_profile.user %}
+          {% if is_follower %}
+          <button id="{{ user_profile.pk }}" class="follow-unfollow">Unfollow </button>
+          {% else %}
+          <button id="{{ user_profile.pk }}" class="follow-unfollow" >Follow</button>
+          {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="profile-info">
+      {% if request.user == user_profile.user %}
+      <div class="profile-edit-modal" >
+        <div class="edit-modal-content">
+          <form method="POST" id='bio-form'>
+            {% csrf_token %}
+            {{ bio_form|crispy }}
+            <input type="submit" value="Update Bio" class="submit-profile-bio">
+          </form>
+          <form method="POST" id='pic-form' enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ pic_form|crispy }}
+            <input type="submit" value="Update Pic" class="submit-profile-pic">
+          </form>
+          <button class="btn btn-warning" id="cancel">Cancel</button>
+      </div>
+    </div>
+    <br>
+    <button id="appear_pic" class="upload-img-btn">+</button>
+
+
+    {% endif %}
+
+    <div class="user-bio">
+      <p>{{ user_profile.bio }}</p>
+      
+      {% if request.user == user_profile.user %}
+      <button id="appear_bio" class="btn btn-success">Update Bio</button>
+      {% endif %}
+    </div>
+    <hr>
+    </div>
+
+    <div class="profile-page-body">
+      <h1 id="posts-by-author">Posts by this author</h1>
+      {% if user_posts %}
+      {% for post in user_posts %}
+      <div class="post-entry">
+        <h2><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h2>
+        <p>{{ post.body|truncatewords:60 }}</p>
+    </div>
+      {% endfor %}
+      {% else %}
+      <h2>No posts by this author yet. </h2>
+      {% endif %}
+    </div>
+
+    <div class="pagination">
+      <span class="step-links">
+          {% if user_posts.has_previous %}
+              <a href="?page=1">&laquo; first</a>
+              <a href="?page={{ user_posts.previous_page_number }}">previous</a>
+          {% endif %}
+  
+          <span class="current">
+              Page {{ user_posts.number }} of {{ user_posts.paginator.num_pages }}.
+          </span>
+  
+          {% if user_posts.has_next %}
+              <a href="?page={{ user_posts.next_page_number }}">next</a>
+              <a href="?page={{ user_posts.paginator.num_pages }}">last &raquo;</a>
+          {% endif %}
+      </span>
+  </div>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+             <div class="parent-follow-list">
+                 <div id="follow-child-left">
+                <ul id="new-followers">
+                {% if followers > 0 %}
+
+                    {% for follower in follower_list %}
+                        <li id="{{ follower.user.id }}"><a href="{% url 'profile' follower.id %}">{{follower.user.username}}</a></li>
+                    {% endfor %}
+
+                {% else %}
+                <h5 id="no-followers-id">No followers</h5>
+                {% endif %}
+              </ul>
+            </div>
+            <div id="follow-child-right">
+                {% if following > 0 %}
+                <ul>
+                    {% for follow in following_list %}
+                    <li><a href="{% url 'profile' follow.id %}">{{follow.user.username}}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <h5>No following</h5>
+                {% endif %}
+            </div>
+        </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block domready %}
+    let u_id = {{ request.user.id }} ;
+
+    let p_followers = document.getElementById('followers-btn').innerHTML;
+    var if_follow_present = document.querySelector('.follow-unfollow');
+    if(if_follow_present){
+      if_follow_present.onclick = () =>{
+        const request = new XMLHttpRequest();
+        request.open("POST", '{% url "follow" user_profile.pk %}');
+        request.onload = () => {
+
+            const rcvd_data = JSON.parse(request.responseText);
+            if(rcvd_data.done){
+              
+              if_follow_present.innerHTML = "Unfollow";
+                let li = document.createElement('li');
+                li.id = u_id;
+                var link = document.createTextNode('{{ request.user.username }}');
+                let a = document.createElement('a');
+                a.appendChild(link);
+                a.href = "{% url 'profile' this_user %}";
+                a.title = '{{ request.user.username }}' ;
+                li.appendChild(a);
+                if(parseInt(p_followers) === 0 ){
+
+                  document.getElementById('no-followers-id').remove();
+                }
+
+                document.getElementById('new-followers').appendChild(li);
+                let new_followers = parseInt(p_followers) + 1;
+                document.getElementById('followers-btn').innerHTML = `${new_followers} followers`;
+                p_followers = new_followers;
+                
+            }else{
+              if_follow_present.innerHTML = "Follow";
+              document.getElementById(u_id).remove();
+              let new_followers = parseInt(p_followers) - 1;
+              if(new_followers == 0){
+                  var h5 = document.createElement("H5");
+                  h5.innerHTML = 'No followers';  
+                  h5.id = "no-followers-id";             
+                document.getElementById('follow-child-left').appendChild(h5);
+              }
+              document.getElementById('followers-btn').innerHTML = `${new_followers} followers`;
+              p_followers = new_followers;
+            }
+
+        }
+
+        const this_data = new FormData();
+        this_data.append('csrfmiddlewaretoken', csrftoken);
+
+        request.send(this_data);
+        return false;
+      }
+    }
+{% endblock %}

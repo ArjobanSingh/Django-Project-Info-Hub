@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% if count > 0 %}
+        Posts by the authors you are following:
+        {% for post in posts %}
+        <div class="post-entry">
+            <h2><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h2>
+            <h5>By:- <a href="{% url 'profile' post.author.id %}"> {{ post.author }}</a></h5>
+            <p>{{ post.body|truncatewords:60 }}</p>
+        </div>
+        {% endfor %}
+        No posts are published by the authors you are following
+    {% endif %}
+{% endblock %}

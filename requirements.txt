@@ -1,0 +1,16 @@
+boto3==1.12.11
+botocore==1.15.11
+Django==2.2
+django-crispy-forms==1.8.1
+django-storages==1.9.1
+docutils==0.15.2
+gunicorn==19.9.0
+jmespath==0.9.5
+Pillow==6.2.1
+python-dateutil==2.8.1
+pytz==2019.3
+s3transfer==0.3.3
+six==1.14.0
+sqlparse==0.3.0
+urllib3==1.25.8
+whitenoise==3.3.1

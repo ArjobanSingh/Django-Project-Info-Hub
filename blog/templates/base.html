@@ -1,0 +1,84 @@
+{% load static %}
+<html>
+    <head>
+        <title>Info-Hub</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400">
+        <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    </head>
+    <body>
+        <header>
+            <div class="nav-left">
+            <h1><a href="{% url 'home' %}">Info-Hub</a>
+            </h1></div>
+
+            <div class="nav-right">
+                <a href="{% url 'post_new' %}">+ New Blog Post</a>
+            </div>
+
+            {% if request.user.is_authenticated %}
+            <div class="nav-right">
+                <a href="{% url 'foolowing_posts' %}">Following</a>
+            </div>
+            <div class="nav-right">
+                <a href="{% url 'profile' request.user.profile.id %}">Profile</a>
+            </div>
+            <div class="nav-right">
+                <button id="settings-btn" type="button" >Settings</button>
+            </div>
+
+            {% else %}
+            <div class="nav-right">
+                <a href="{% url 'login' %}">Log in</a>
+            </div>
+            <div class="nav-right">
+                <a href="{% url 'signup' %}">Sign Up </a>
+            </div>
+            {% endif %}
+
+        </header>
+
+        {% if request.user.is_authenticated %}
+        <div class=" my-card card" style="width: 18rem; display: none; ">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><a href="{% url 'password_change' %}">Change Password</a></li>
+                <li class="list-group-item"><a href="{% url 'logout' %}">Log out</a></li>  
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="margin" >
+            {% block content %}
+            {% endblock content %}
+        </div>
+
+
+        <script src="{% static 'javascript/main.js' %}"></script>
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+
+        <script>
+            var csrftoken = Cookies.get('csrftoken');
+            function csrfSafeMethod(method) {
+              // these HTTP methods do not require CSRF protection
+              return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            $.ajaxSetup({
+              beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                  xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+              }
+            });
+            $(document).ready(function(){
+              {% block domready %}
+              {% endblock %}
+               });
+          </script>
+    </body>
+</html>
